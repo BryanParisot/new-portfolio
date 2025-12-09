@@ -26,6 +26,7 @@ const backgroundImages = [
 interface ImageCardProps {
     image: typeof backgroundImages[0];
     index: number;
+
 }
 
 function ImageCard({ image, index }: ImageCardProps) {
@@ -39,62 +40,63 @@ function ImageCard({ image, index }: ImageCardProps) {
     };
 
     const rotationDegrees = getRotationDegrees(image.rotation);
-useEffect(() => {
-  const card = cardRef.current;
-  if (!card) return;
 
-  const handleScroll = () => {
-    // 🧷 On remonte jusqu'au container de scroll
-    const section = card.closest('[data-scroll-section]') as HTMLElement | null;
-    if (!section) return;
+    useEffect(() => {
+        const card = cardRef.current;
+        if (!card) return;
 
-    const sectionTop = section.offsetTop;        // début du container (200vh)
-    const sectionHeight = section.offsetHeight;  // ≈ 200vh
-    const scrollY = window.scrollY;
-    const windowHeight = window.innerHeight;
+        const handleScroll = () => {
+            const section = card.closest('[data-scroll-section]') as HTMLElement | null;
+            if (!section) return;
 
-    // 🧠 La section est "traversée" entre :
-    // - start : quand le haut du container arrive en haut de l'écran
-    // - end   : quand le bas du container quitte le bas (on enlève windowHeight)
-    const start = sectionTop;
-    const end = sectionTop + sectionHeight - windowHeight;
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.offsetHeight;
+            const scrollY = window.scrollY;
+            const windowHeight = window.innerHeight;
 
-    let scrollProgress: number;
+            const start = sectionTop;
+            const end = sectionTop + sectionHeight - windowHeight;
 
-    if (scrollY <= start) {
-      // Avant le container → état initial
-      scrollProgress = 0;
-    } else if (scrollY >= end) {
-      // Après le container → état final
-      scrollProgress = 1;
-    } else {
-      // Pendant qu'on traverse le container → 0 → 1
-      scrollProgress = (scrollY - start) / (end - start);
-    }
+            let scrollProgress: number;
 
-    // Debug si tu veux voir ce qui se passe
-    // console.log({ scrollY, start, end, scrollProgress });
+            if (scrollY <= start) {
+                scrollProgress = 0;
+            } else if (scrollY >= end) {
+                scrollProgress = 1;
+            } else {
+                scrollProgress = (scrollY - start) / (end - start);
+            }
 
-    const opacity = 1 - scrollProgress * 0.8;
-    const scale = 1 - scrollProgress * 0.4;
+            // 🎯 Ici on ZOOM au lieu de réduire
 
-    gsap.to(card, {
-      opacity,
-      scale: 1 + scrollProgress * 0.5,
-      rotation: rotationDegrees,
-      duration: 0.3,
-      ease: "power2.out",
-      force3D: true,
-    });
-  };
+            const maxZ = 600; // la valeur “vers l’écran”
+            const moveZ = maxZ * scrollProgress;
 
-  window.addEventListener("scroll", handleScroll);
-  handleScroll();
+            const minScale = 0.9;   // taille au début
+            const maxScale = 1.6;   // taille en bas de la section
+            const scale = minScale + (maxScale - minScale) * scrollProgress;
 
-  return () => {
-    window.removeEventListener("scroll", handleScroll);
-  };
-}, [rotationDegrees]);
+            const opacity = 1 - scrollProgress * 0.2; // tu peux ajuster ou supprimer
+
+            gsap.to(card, {
+                z: moveZ,
+                scale,
+                opacity,
+                rotation: rotationDegrees,
+                transformOrigin: "50% 50%",
+                duration: 0.3,
+                ease: "power2.out",
+                force3D: true,
+            });
+        };
+
+        window.addEventListener("scroll", handleScroll);
+        handleScroll();
+
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+        };
+    }, [rotationDegrees]);
 
     return (
         <div
@@ -112,27 +114,121 @@ useEffect(() => {
 }
 
 export default function Recommendations() {
-  return (
-    // 🔴 Container de scroll (c’est LUI qu’on utilise pour le calcul)
-    <section
-      className="relative h-[200vh] bg-gray-100"
-      data-scroll-section
-    >
-      {/* 🟢 Contenu sticky à l’intérieur */}
-      <div className="sticky top-0 h-screen w-full flex items-center sm:px-6 lg:px-8 overflow-hidden">
-        <div className="absolute inset-0" style={{ transformStyle: 'preserve-3d' }}>
-          {backgroundImages.map((image, index) => (
-            <ImageCard key={index} image={image} index={index} />
-          ))}
-        </div>
+    const sectionRef = useRef<HTMLElement | null>(null);
+    const titleRef = useRef<HTMLDivElement | null>(null);
+    const textRef = useRef<HTMLHeadingElement>(null);
+    const line2Ref = useRef<HTMLHeadingElement>(null);
 
-        <div className="relative z-10 max-w-4xl m-auto text-center">
-          <h2 className="text-4xl md:text-6xl font-light text-gray-900 leading-tight mb-6">
-            <span className='block'>Créer du sens</span>
-            <span className='block'>Propulser des projets</span>
-          </h2>
-        </div>
-      </div>
-    </section>
-  );
+    useEffect(() => {
+        const section = sectionRef.current;
+        const title = titleRef.current;
+        if (!section || !title) return;
+
+        const handleScroll = () => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.offsetHeight;
+            const scrollY = window.scrollY;
+            const windowHeight = window.innerHeight;
+
+            const start = sectionTop;
+            const end = sectionTop + sectionHeight - windowHeight;
+
+            let progress: number;
+
+            if (scrollY <= start) {
+                progress = 0;
+            } else if (scrollY >= end) {
+                progress = 1;
+            } else {
+                progress = (scrollY - start) / (end - start);
+            }
+
+            // 📌 Zoom vers le texte
+            const scale = 1.3 + progress * 0.3; // 1 → 1.3
+            const y = -40 * progress;         // il remonte légèrement
+
+            gsap.to(title, {
+                scale,
+                y,
+                transformOrigin: "center center",
+                duration: 0.3,
+                ease: "power2.out",
+            });
+        };
+
+        window.addEventListener("scroll", handleScroll);
+        handleScroll();
+
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+        };
+    }, []);
+useEffect(() => {
+  const handleScroll = () => {
+    const section = document.querySelector('[data-scroll-section]') as HTMLElement | null;
+    if (!section || !textRef.current) return;
+
+    const sectionTop = section.offsetTop;
+    const sectionHeight = section.offsetHeight;
+    const scrollY = window.scrollY;
+    const windowHeight = window.innerHeight;
+
+    const start = sectionTop;
+    const end = sectionTop + sectionHeight - windowHeight;
+
+    let progress = 0;
+
+    if (scrollY <= start) progress = 0;
+    else if (scrollY >= end) progress = 1;
+    else progress = (scrollY - start) / (end - start);
+
+      gsap.to(line2Ref.current, {
+        fontWeight: 200 + progress * 300,       // bold
+        scale: 1 + progress * 0.25, // zoom très propre
+        duration: 0.3,
+        ease: "power2.out",
+      });
+
+    // 🔥 Animation du texte (fade + zoom out)
+    gsap.to(textRef.current, {
+      opacity: 1 - progress,             // fade out progressif
+      scale: 1 - progress * 0.3,         // léger zoom out synchronisé
+      y: -progress * 50,                 // le texte remonte légèrement
+      ease: "power2.out",
+      duration: 0.3,
+    });
+  };
+
+  window.addEventListener("scroll", handleScroll);
+  handleScroll();
+
+  return () => window.removeEventListener("scroll", handleScroll);
+}, []);
+    return (
+
+        <section
+            ref={sectionRef}
+            className="relative h-[200vh] bg-gray-100"
+            data-scroll-section
+        >
+            <div
+                className="sticky top-0 h-screen w-full flex items-center sm:px-6 lg:px-8 overflow-hidden"
+                style={{ perspective: '900px', transformStyle: 'preserve-3d' }}
+            >
+                <div className="absolute inset-0 " style={{ transformStyle: 'preserve-3d', perspective: '1200px' }}>
+                    {backgroundImages.map((image, index) => (
+                        <ImageCard key={index} image={image} index={index} />
+                    ))}
+                </div>
+
+                <div ref={titleRef} className="relative z-10 max-w-4xl m-auto text-center">
+                    <h2 className="text-4xl md:text-6xl font-light text-gray-900 leading-tight mb-6">
+                        <span ref={textRef} className='block'>Créer du sens</span>
+                        <span ref={line2Ref} className='block'>Propulser des projets</span>
+                    </h2>
+                </div>
+            </div>
+        </section>
+
+    );
 }
