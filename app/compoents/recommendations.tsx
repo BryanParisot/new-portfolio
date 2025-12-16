@@ -118,6 +118,8 @@ export default function Recommendations() {
     const titleRef = useRef<HTMLDivElement | null>(null);
     const textRef = useRef<HTMLHeadingElement>(null);
     const line2Ref = useRef<HTMLHeadingElement>(null);
+    const bgImageRef = useRef<HTMLDivElement | null>(null);
+    const bgRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const section = sectionRef.current;
@@ -163,47 +165,85 @@ export default function Recommendations() {
             window.removeEventListener("scroll", handleScroll);
         };
     }, []);
-useEffect(() => {
-  const handleScroll = () => {
-    const section = document.querySelector('[data-scroll-section]') as HTMLElement | null;
-    if (!section || !textRef.current) return;
+    useEffect(() => {
+        const handleScroll = () => {
+            const section = document.querySelector('[data-scroll-section]') as HTMLElement | null;
+            if (!section || !textRef.current) return;
 
-    const sectionTop = section.offsetTop;
-    const sectionHeight = section.offsetHeight;
-    const scrollY = window.scrollY;
-    const windowHeight = window.innerHeight;
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.offsetHeight;
+            const scrollY = window.scrollY;
+            const windowHeight = window.innerHeight;
 
-    const start = sectionTop;
-    const end = sectionTop + sectionHeight - windowHeight;
+            const start = sectionTop;
+            const end = sectionTop + sectionHeight - windowHeight;
 
-    let progress = 0;
+            let progress = 0;
 
-    if (scrollY <= start) progress = 0;
-    else if (scrollY >= end) progress = 1;
-    else progress = (scrollY - start) / (end - start);
+            if (scrollY <= start) progress = 0;
+            else if (scrollY >= end) progress = 1;
+            else progress = (scrollY - start) / (end - start);
 
-      gsap.to(line2Ref.current, {
-        fontWeight: 200 + progress * 300,       // bold
-        scale: 1 + progress * 0.25, // zoom très propre
-        duration: 0.3,
-        ease: "power2.out",
-      });
+            gsap.to(line2Ref.current, {
+                fontWeight: 200 + progress * 300,       // bold
+                scale: 1 + progress * 0.25, // zoom très propre
+                duration: 0.3,
+                ease: "power2.out",
+            });
 
-    // 🔥 Animation du texte (fade + zoom out)
-    gsap.to(textRef.current, {
-      opacity: 1 - progress,             // fade out progressif
-      scale: 1 - progress * 0.3,         // léger zoom out synchronisé
-      y: -progress * 50,                 // le texte remonte légèrement
-      ease: "power2.out",
-      duration: 0.3,
-    });
-  };
+            // 🔥 Animation du texte (fade + zoom out)
+            gsap.to(textRef.current, {
+                opacity: 1 - progress,             // fade out progressif
+                scale: 1 - progress * 0.3,         // léger zoom out synchronisé
+                y: -progress * 50,                 // le texte remonte légèrement
+                ease: "power2.out",
+                duration: 0.3,
+            });
+        };
 
-  window.addEventListener("scroll", handleScroll);
-  handleScroll();
+        window.addEventListener("scroll", handleScroll);
+        handleScroll();
 
-  return () => window.removeEventListener("scroll", handleScroll);
-}, []);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+    useEffect(() => {
+        const section = sectionRef.current;
+        const bg = bgRef.current;
+        if (!section || !bg) return;
+
+        const handleScroll = () => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.offsetHeight;
+            const scrollY = window.scrollY;
+            const windowHeight = window.innerHeight;
+
+            const start = sectionTop;
+            const end = sectionTop + sectionHeight - windowHeight;
+
+            let progress = 0;
+            if (scrollY <= start) progress = 0;
+            else if (scrollY >= end) progress = 1;
+            else progress = (scrollY - start) / (end - start);
+
+            // 🎯 L’image apparaît progressivement
+            const scale = 0.1 + progress * 0.3; // 0.2 → 1.5
+            const opacity = progress; // fade in
+
+            gsap.to(bg, {
+                scale,
+                opacity,
+                duration: 0.3,
+                backgroundSize: `${50 + progress * 60}%`,
+                ease: "power2.out",
+            });
+        };
+
+        window.addEventListener("scroll", handleScroll);
+        handleScroll();
+
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+
     return (
 
         <section
@@ -215,6 +255,21 @@ useEffect(() => {
                 className="sticky top-0 h-screen w-full flex items-center sm:px-6 lg:px-8 overflow-hidden"
                 style={{ perspective: '900px', transformStyle: 'preserve-3d' }}
             >
+                <div
+                    ref={bgRef}
+                    className="absolute inset-0 flex items-center justify-center opacity-0 pointer-events-none"
+                    style={{
+                        backgroundImage: "url('/ton-image.jpg')",
+                        backgroundSize: "50%", // point de départ
+                        transform: "scale(0.5)",
+                    }}
+                >
+                    <img
+                        src="/bryan-maquette.jpg"
+                        alt="Background"
+                        className="w-full h-full object-cover"
+                    />
+                </div>
                 <div className="absolute inset-0 " style={{ transformStyle: 'preserve-3d', perspective: '1200px' }}>
                     {backgroundImages.map((image, index) => (
                         <ImageCard key={index} image={image} index={index} />
