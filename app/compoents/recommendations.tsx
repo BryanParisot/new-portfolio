@@ -279,7 +279,7 @@ export default function Recommendations() {
                 <div ref={titleRef} className="relative z-10 max-w-4xl m-auto text-center">
                     <h2 className="text-4xl md:text-6xl font-light text-gray-900 leading-tight mb-6">
                         <span ref={textRef} className='block'>Créer du sens</span>
-                        <span ref={line2Ref} className='block'>Propulser des projets</span>
+                        <span ref={line2Ref} className='block'>Propulser votre projet</span>
                     </h2>
                 </div>
             </div>

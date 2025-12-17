@@ -2,6 +2,8 @@ import Image from "next/image";
 import Header from "./compoents/header";
 import Recommendations from "./compoents/recommendations";
 import ArgumentSection from "./compoents/argumentSection";
+import HorizontalScrollSection from "./compoents/HorizontalScrollSection";
+import TextRevealSection from "./compoents/TextRevealSection";
 
 export default function Home() {
   return (
@@ -10,8 +12,10 @@ export default function Home() {
       <Recommendations />
       {/* Contenu temporaire pour créer l'espace de scroll */}
       <ArgumentSection />
-      <div className="h-[200vh] bg-white flex items-center justify-center">
-        <p className="text-2xl text-gray-600">Contenu suivant...</p>
+      <HorizontalScrollSection />
+      <TextRevealSection />
+      <div className="h-[50vh] bg-white flex items-center justify-center">
+        <p className="text-gray-400">Footer ou Contact...</p>
       </div>
     </>
   );
